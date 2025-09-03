@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busca Simples - Paperless Integration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+        
+        .busca-section {
+            padding: 40px;
+            background: #f8f9fa;
+        }
+        
+        .busca-form {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .busca-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .busca-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn-buscar {
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+        
+        .btn-buscar:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-buscar:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #6c757d;
+        }
+        
+        .loading.hidden {
+            display: none;
+        }
+        
+        .resultados {
+            padding: 0 40px 40px;
+        }
+        
+        .resultado-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .resultado-header h3 {
+            color: #2c3e50;
+            font-size: 1.3em;
+        }
+        
+        .documento-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .documento-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .doc-titulo {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        
+        .doc-meta {
+            color: #6c757d;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+        
+        .doc-preview {
+            color: #495057;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .doc-acoes {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-acao {
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-visualizar {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-visualizar:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+        
+        .btn-download {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-download:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+        
+        .erro {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            text-align: center;
+        }
+        
+        .sem-resultados {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 1.1em;
+        }
+        
+        .config-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .config-section h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .config-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .busca-form {
+                flex-direction: column;
+            }
+            
+            .busca-input {
+                min-width: auto;
+            }
+            
+            .doc-acoes {
+                flex-direction: column;
+            }
+            
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Sistema de Busca de Documentos</h1>
+            <p>Integração com Paperless-NGX</p>
+        </div>
+        
+        <div class="busca-section">
+            <!-- Configuração da API -->
+            <div class="config-section">
+                <h4>⚙️ Configuração da API</h4>
+                <input type="text" id="paperlessUrl" class="config-input" 
+                       placeholder="URL do Paperless (ex: http://localhost:8000)" 
+                       value="http://localhost:8000">
+                <input type="text" id="apiToken" class="config-input" 
+                       placeholder="Token da API (obtenha em Settings → API Tokens)">
+                <small style="color: #856404;">💡 Configure estes campos antes de fazer buscas</small>
+            </div>
+            
+            <!-- Formulário de Busca -->
+            <div class="busca-form">
+                <input type="text" id="query" class="busca-input" 
+                       placeholder="Digite um termo para buscar documentos...">
+                <button onclick="buscarDocumentos()" class="btn-buscar" id="btnBuscar">
+                    🔍 Buscar
+                </button>
+            </div>
+        </div>
+        
+        <div id="loading" class="loading hidden">
+            ⏳ Buscando documentos...
+        </div>
+        
+        <div id="resultados" class="resultados"></div>
+    </div>
+    
+    <script>
+        // Configuração da API
+        function getConfig() {
+            return {
+                url: document.getElementById('paperlessUrl').value || 'http://localhost:8000',
+                token: document.getElementById('apiToken').value
+            };
+        }
+        
+        function getHeaders() {
+            const config = getConfig();
+            if (!config.token) {
+                throw new Error('Token da API não configurado');
+            }
+            
+            return {
+                'Authorization': `Token ${config.token}`,
+                'Content-Type': 'application/json'
+            };
+        }
+        
+        // Função principal de busca
+        async function buscarDocumentos() {
+            const query = document.getElementById('query').value.trim();
+            const config = getConfig();
+            
+            if (!config.token) {
+                alert('⚠️ Por favor, configure o Token da API antes de buscar.');
+                return;
+            }
+            
+            if (!query) {
+                alert('⚠️ Digite um termo para buscar.');
+                return;
+            }
+            
+            // Construir URL da API
+            const url = `${config.url}/api/documents/?query=${encodeURIComponent(query)}`;
+            
+            // Mostrar loading
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('resultados').innerHTML = '';
+            document.getElementById('btnBuscar').disabled = true;
+            document.getElementById('btnBuscar').textContent = '⏳ Buscando...';
+            
+            try {
+                const response = await fetch(url, { 
+                    headers: getHeaders(),
+                    method: 'GET'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                exibirResultados(data);
+                
+            } catch (error) {
+                console.error('Erro na busca:', error);
+                
+                let mensagemErro = 'Erro ao buscar documentos.';
+                
+                if (error.message.includes('Failed to fetch')) {
+                    mensagemErro += ' Verifique se o Paperless está rodando e se a URL está correta.';
+                } else if (error.message.includes('401')) {
+                    mensagemErro += ' Token de API inválido.';
+                } else if (error.message.includes('403')) {
+                    mensagemErro += ' Acesso negado. Verifique as permissões do token.';
+                } else {
+                    mensagemErro += ` Detalhes: ${error.message}`;
+                }
+                
+                document.getElementById('resultados').innerHTML = 
+                    `<div class="erro">❌ ${mensagemErro}</div>`;
+                    
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('btnBuscar').disabled = false;
+                document.getElementById('btnBuscar').textContent = '🔍 Buscar';
+            }
+        }
+        
+        // Exibir resultados
+        function exibirResultados(data) {
+            const container = document.getElementById('resultados');
+            const config = getConfig();
+            
+            if (data.count === 0) {
+                container.innerHTML = `
+                    <div class="sem-resultados">
+                        📄 Nenhum documento encontrado para esta busca.
+                        <br><small>Tente usar termos diferentes ou verifique a ortografia.</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <div class="resultado-header">
+                    <h3>📊 ${data.count} documento(s) encontrado(s)</h3>
+                </div>
+            `;
+            
+            data.results.forEach(doc => {
+                const dataFormatada = new Date(doc.created).toLocaleDateString('pt-BR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                // Limitar preview do conteúdo
+                const preview = doc.content ? 
+                    doc.content.substring(0, 300) + (doc.content.length > 300 ? '...' : '') :
+                    'Conteúdo não disponível para preview.';
+                
+                html += `
+                    <div class="documento-card">
+                        <div class="doc-titulo">${doc.title || 'Documento sem título'}</div>
+                        
+                        <div class="doc-meta">
+                            📅 Criado em: ${dataFormatada}
+                            ${doc.tags && doc.tags.length > 0 ? `🏷️ ${doc.tags.length} tag(s)` : ''}
+                            ${doc.document_type ? '📋 Tipo: ' + doc.document_type : ''}
+                        </div>
+                        
+                        <div class="doc-preview">
+                            ${preview}
+                        </div>
+                        
+                        <div class="doc-acoes">
+                            <a href="${config.url}/documents/${doc.id}/" 
+                               target="_blank" 
+                               class="btn-acao btn-visualizar">
+                                📄 Visualizar Completo
+                            </a>
+                            <a href="${config.url}/api/documents/${doc.id}/download/" 
+                               target="_blank" 
+                               class="btn-acao btn-download">
+                                ⬇️ Download PDF
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Adicionar paginação se houver mais resultados
+            if (data.next || data.previous) {
+                html += `
+                    <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                        <p><strong>📄 Paginação:</strong></p>
+                        <small>Esta é uma versão simplificada. Mostrando os primeiros resultados.</small>
+                        <br><small>Total de documentos: ${data.count}</small>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        // Buscar ao pressionar Enter
+        document.getElementById('query').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                buscarDocumentos();
+            }
+        });
+        
+        // Salvar configurações no localStorage
+        document.getElementById('paperlessUrl').addEventListener('change', function() {
+            localStorage.setItem('paperless_url', this.value);
+        });
+        
+        document.getElementById('apiToken').addEventListener('change', function() {
+            localStorage.setItem('paperless_token', this.value);
+        });
+        
+        // Carregar configurações salvas
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedUrl = localStorage.getItem('paperless_url');
+            const savedToken = localStorage.getItem('paperless_token');
+            
+            if (savedUrl) {
+                document.getElementById('paperlessUrl').value = savedUrl;
+            }
+            
+            if (savedToken) {
+                document.getElementById('apiToken').value = savedToken;
+            }
+        });
+        
+        // Teste de conexão
+        async function testarConexao() {
+            try {
+                const config = getConfig();
+                const response = await fetch(`${config.url}/api/documents/?page_size=1`, {
+                    headers: getHeaders()
+                });
+                
+                if (response.ok) {
+                    alert('✅ Conexão com Paperless-NGX estabelecida com sucesso!');
+                } else {
+                    throw new Error(`Erro ${response.status}`);
+                }
+            } catch (error) {
+                alert(`❌ Erro na conexão: ${error.message}`);
+            }
+        }
+        
+        // Adicionar botão de teste (opcional)
+        console.log('💡 Dica: Execute testarConexao() no console para testar a conexão com a API.');
+    </script>
+</body>
+</html>
