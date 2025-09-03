@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busca Avançada - Paperless Integration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+        
+        .config-section {
+            background: #fff3cd;
+            border-bottom: 1px solid #ffeaa7;
+            padding: 20px 40px;
+        }
+        
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .config-input {
+            padding: 10px 15px;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .busca-section {
+            padding: 40px;
+            background: #f8f9fa;
+        }
+        
+        .busca-form {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .busca-principal {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .busca-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .busca-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .filtros-avancados {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .filtro-grupo {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .filtro-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        .filtro-input {
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .filtro-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn-buscar {
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+        
+        .btn-buscar:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-limpar {
+            padding: 15px 30px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-limpar:hover {
+            background: #5a6268;
+        }
+        
+        .estatisticas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .stat-numero {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #6c757d;
+        }
+        
+        .loading.hidden {
+            display: none;
+        }
+        
+        .resultados {
+            padding: 0 40px 40px;
+        }
+        
+        .resultado-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .ordenacao {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .documento-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .documento-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .doc-titulo {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2c3e50;
+            line-height: 1.3;
+            flex: 1;
+        }
+        
+        .doc-score {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .doc-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        
+        .doc-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .tag {
+            background: #e7f3ff;
+            color: #0066cc;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        
+        .doc-preview {
+            color: #495057;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .doc-acoes {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-acao {
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        
+        .btn-visualizar {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-download {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-preview {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-acao:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+        
+        .paginacao {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .btn-pagina {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-pagina:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .btn-pagina.ativo {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .erro {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            text-align: center;
+        }
+        
+        .sem-resultados {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 1.1em;
+        }
+        
+        @media (max-width: 768px) {
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .busca-principal {
+                flex-direction: column;
+            }
+            
+            .filtros-avancados {
+                grid-template-columns: 1fr;
+            }
+            
+            .resultado-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+            
+            .doc-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .doc-meta {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Busca Avançada de Documentos</h1>
+            <p>Sistema completo de pesquisa com filtros e paginação</p>
+        </div>
+        
+        <!-- Configuração da API -->
+        <div class="config-section">
+            <h4 style="margin-bottom: 15px; color: #856404;">⚙️ Configuração da API</h4>
+            <div class="config-grid">
+                <input type="text" id="paperlessUrl" class="config-input" 
+                       placeholder="URL do Paperless (ex: http://localhost:8000)" 
+                       value="http://192.168.1.1:8000">
+                <input type="text" id="apiToken" class="config-input" 
+                       placeholder="Token da API" 
+                       value="db3abd1cc810833ff3c2ca027d610cf2ae66da35">
+            </div>
+        </div>
+        
+        <div class="busca-section">
+            <!-- Estatísticas -->
+            <div class="estatisticas" id="estatisticas" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-numero" id="totalDocs">-</div>
+                    <div class="stat-label">Total de Documentos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-numero" id="totalTags">-</div>
+                    <div class="stat-label">Categorias</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-numero" id="totalTipos">-</div>
+                    <div class="stat-label">Tipos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-numero" id="ultimaBusca">-</div>
+                    <div class="stat-label">Última Busca</div>
+                </div>
+            </div>
+            
+            <!-- Formulário de Busca -->
+            <div class="busca-form">
+                <div class="busca-principal">
+                    <input type="text" id="query" class="busca-input" 
+                           placeholder="Digite um termo para buscar documentos...">
+                    <button onclick="buscarDocumentos()" class="btn-buscar" id="btnBuscar">
+                        🔍 Buscar
+                    </button>
+                    <button onclick="limparFiltros()" class="btn-limpar">
+                        🗑️ Limpar
+                    </button>
+                </div>
+                
+                <!-- Filtros Avançados -->
+                <div class="filtros-avancados">
+                    <div class="filtro-grupo">
+                        <label class="filtro-label">📂 Categoria</label>
+                        <select id="categoria" class="filtro-input">
+                            <option value="">Todas as categorias</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filtro-grupo">
+                        <label class="filtro-label">📋 Tipo de Documento</label>
+                        <select id="tipoDocumento" class="filtro-input">
+                            <option value="">Todos os tipos</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filtro-grupo">
+                        <label class="filtro-label">👤 Correspondente</label>
+                        <select id="correspondente" class="filtro-input">
+                            <option value="">Todos os correspondentes</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filtro-grupo">
+                        <label class="filtro-label">📅 Data Inicial</label>
+                        <input type="date" id="dataInicio" class="filtro-input">
+                    </div>
+                    
+                    <div class="filtro-grupo">
+                        <label class="filtro-label">📅 Data Final</label>
+                        <input type="date" id="dataFim" class="filtro-input">
+                    </div>
+                    
+                    <div class="filtro-grupo">
+                        <label class="filtro-label">📄 Itens por Página</label>
+                        <select id="itensPorPagina" class="filtro-input">
+                            <option value="10">10 itens</option>
+                            <option value="20" selected>20 itens</option>
+                            <option value="50">50 itens</option>
+                            <option value="100">100 itens</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="loading" class="loading hidden">
+            ⏳ Buscando documentos...
+        </div>
+        
+        <div id="resultados" class="resultados"></div>
+    </div>
+    
+    <script>
+        // Estado da aplicação
+        let paginaAtual = 1;
+        let ultimaBusca = null;
+        let metadados = {
+            tags: [],
+            tipos: [],
+            correspondentes: []
+        };
+        
+        // Configuração da API
+        function getConfig() {
+            return {
+                url: document.getElementById('paperlessUrl').value || 'http://192.168.1.1:8000',
+                token: document.getElementById('apiToken').value
+            };
+        }
+        
+        function getHeaders() {
+            const config = getConfig();
+            if (!config.token) {
+                throw new Error('Token da API não configurado');
+            }
+            
+            return {
+                'Authorization': `Token ${config.token}`,
+                'Content-Type': 'application/json'
+            };
+        }
+        
+        // Carregar metadados (tags, tipos, correspondentes)
+        async function carregarMetadados() {
+            try {
+                const config = getConfig();
+                const headers = getHeaders();
+                
+                // Carregar tags
+                const tagsResponse = await fetch(`${config.url}/api/tags/`, { headers });
+                const tagsData = await tagsResponse.json();
+                metadados.tags = tagsData.results || [];
+                
+                // Carregar tipos de documento
+                const tiposResponse = await fetch(`${config.url}/api/document_types/`, { headers });
+                const tiposData = await tiposResponse.json();
+                metadados.tipos = tiposData.results || [];
+                
+                // Carregar correspondentes
+                const corrResponse = await fetch(`${config.url}/api/correspondents/`, { headers });
+                const corrData = await corrResponse.json();
+                metadados.correspondentes = corrData.results || [];
+                
+                // Atualizar selects
+                atualizarSelects();
+                
+                // Atualizar estatísticas
+                document.getElementById('totalTags').textContent = metadados.tags.length;
+                document.getElementById('totalTipos').textContent = metadados.tipos.length;
+                document.getElementById('estatisticas').style.display = 'grid';
+                
+            } catch (error) {
+                console.error('Erro ao carregar metadados:', error);
+            }
+        }
+        
+        function atualizarSelects() {
+            // Atualizar select de categorias
+            const selectCategorias = document.getElementById('categoria');
+            selectCategorias.innerHTML = '<option value="">Todas as categorias</option>';
+            metadados.tags.forEach(tag => {
+                const option = document.createElement('option');
+                option.value = tag.id;
+                option.textContent = `${tag.name} (${tag.document_count || 0})`;
+                selectCategorias.appendChild(option);
+            });
+            
+            // Atualizar select de tipos
+            const selectTipos = document.getElementById('tipoDocumento');
+            selectTipos.innerHTML = '<option value="">Todos os tipos</option>';
+            metadados.tipos.forEach(tipo => {
+                const option = document.createElement('option');
+                option.value = tipo.id;
+                option.textContent = `${tipo.name} (${tipo.document_count || 0})`;
+                selectTipos.appendChild(option);
+            });
+            
+            // Atualizar select de correspondentes
+            const selectCorr = document.getElementById('correspondente');
+            selectCorr.innerHTML = '<option value="">Todos os correspondentes</option>';
+            metadados.correspondentes.forEach(corr => {
+                const option = document.createElement('option');
+                option.value = corr.id;
+                option.textContent = `${corr.name} (${corr.document_count || 0})`;
+                selectCorr.appendChild(option);
+            });
+        }
+        
+        // Função principal de busca
+        async function buscarDocumentos(pagina = 1) {
+            const config = getConfig();
+            
+            if (!config.token) {
+                alert('⚠️ Por favor, configure o Token da API antes de buscar.');
+                return;
+            }
+            
+            // Coletar parâmetros de busca
+            const params = coletarParametrosBusca();
+            params.page = pagina;
+            params.page_size = document.getElementById('itensPorPagina').value;
+            
+            // Construir URL
+            const url = `${config.url}/api/documents/?${new URLSearchParams(params).toString()}`;
+            
+            // Mostrar loading
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('resultados').innerHTML = '';
+            document.getElementById('btnBuscar').disabled = true;
+            document.getElementById('btnBuscar').textContent = '⏳ Buscando...';
+            
+            try {
+                const response = await fetch(url, { headers: getHeaders() });
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Salvar estado da busca
+                ultimaBusca = { params, data };
+                paginaAtual = pagina;
+                
+                // Exibir resultados
+                exibirResultados(data);
+                
+                // Atualizar estatísticas
+                document.getElementById('totalDocs').textContent = data.count;
+                document.getElementById('ultimaBusca').textContent = new Date().toLocaleTimeString('pt-BR');
+                
+            } catch (error) {
+                console.error('Erro na busca:', error);
+                document.getElementById('resultados').innerHTML = 
+                    `<div class="erro">❌ Erro ao buscar documentos: ${error.message}</div>`;
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('btnBuscar').disabled = false;
+                document.getElementById('btnBuscar').textContent = '🔍 Buscar';
+            }
+        }
+        
+        function coletarParametrosBusca() {
+            const params = {};
+            
+            const query = document.getElementById('query').value.trim();
+            if (query) params.query = query;
+            
+            const categoria = document.getElementById('categoria').value;
+            if (categoria) params.tags__id__in = categoria;
+            
+            const tipo = document.getElementById('tipoDocumento').value;
+            if (tipo) params.document_type__id = tipo;
+            
+            const correspondente = document.getElementById('correspondente').value;
+            if (correspondente) params.correspondent__id = correspondente;
+            
+            const dataInicio = document.getElementById('dataInicio').value;
+            if (dataInicio) params.created__gte = dataInicio;
+            
+            const dataFim = document.getElementById('dataFim').value;
+            if (dataFim) params.created__lte = dataFim;
+            
+            return params;
+        }
+        
+        // Exibir resultados
+        function exibirResultados(data) {
+            const container = document.getElementById('resultados');
+            const config = getConfig();
+            
+            if (data.count === 0) {
+                container.innerHTML = `
+                    <div class="sem-resultados">
+                        📄 Nenhum documento encontrado para esta busca.
+                        <br><small>Tente ajustar os filtros ou usar termos diferentes.</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Header dos resultados
+            let html = `
+                <div class="resultado-header">
+                    <h3>📊 ${data.count} documento(s) encontrado(s)</h3>
+                    <div class="ordenacao">
+                        <label>Ordenar por:</label>
+                        <select onchange="ordenarResultados(this.value)">
+                            <option value="created">Data de Criação</option>
+                            <option value="modified">Última Modificação</option>
+                            <option value="title">Título</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            
+            // Cards dos documentos
+            data.results.forEach(doc => {
+                html += criarCardDocumento(doc, config);
+            });
+            
+            // Paginação
+            if (data.count > parseInt(document.getElementById('itensPorPagina').value)) {
+                html += criarPaginacao(data);
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        function criarCardDocumento(doc, config) {
+            const dataFormatada = new Date(doc.created).toLocaleDateString('pt-BR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const preview = doc.content ? 
+                doc.content.substring(0, 400) + (doc.content.length > 400 ? '...' : '') :
+                'Conteúdo não disponível para preview.';
+            
+            // Tags
+            let tagsHtml = '';
+            if (doc.tags && doc.tags.length > 0) {
+                const tagNames = doc.tags.map(tagId => {
+                    const tag = metadados.tags.find(t => t.id === tagId);
+                    return tag ? tag.name : `Tag ${tagId}`;
+                });
+                
+                tagsHtml = tagNames.map(name => `<span class="tag">${name}</span>`).join('');
+            }
+            
+            // Tipo de documento
+            let tipoNome = '';
+            if (doc.document_type) {
+                const tipo = metadados.tipos.find(t => t.id === doc.document_type);
+                tipoNome = tipo ? tipo.name : 'Tipo desconhecido';
+            }
+            
+            // Correspondente
+            let corrNome = '';
+            if (doc.correspondent) {
+                const corr = metadados.correspondentes.find(c => c.id === doc.correspondent);
+                corrNome = corr ? corr.name : 'Correspondente desconhecido';
+            }
+            
+            return `
+                <div class="documento-card">
+                    <div class="doc-header">
+                        <div class="doc-titulo">${doc.title || 'Documento sem título'}</div>
+                        ${doc.score ? `<div class="doc-score">Score: ${doc.score.toFixed(2)}</div>` : ''}
+                    </div>
+                    
+                    <div class="doc-meta">
+                        <span>📅 ${dataFormatada}</span>
+                        ${tipoNome ? `<span>📋 ${tipoNome}</span>` : ''}
+                        ${corrNome ? `<span>👤 ${corrNome}</span>` : ''}
+                        <span>🆔 ID: ${doc.id}</span>
+                    </div>
+                    
+                    ${tagsHtml ? `<div class="doc-tags">${tagsHtml}</div>` : ''}
+                    
+                    <div class="doc-preview">${preview}</div>
+                    
+                    <div class="doc-acoes">
+                        <a href="${config.url}/documents/${doc.id}/" 
+                           target="_blank" 
+                           class="btn-acao btn-visualizar">
+                            📄 Visualizar Completo
+                        </a>
+                        <a href="${config.url}/api/documents/${doc.id}/download/" 
+                           target="_blank" 
+                           class="btn-acao btn-download">
+                            ⬇️ Download PDF
+                        </a>
+                        <a href="${config.url}/api/documents/${doc.id}/preview/" 
+                           target="_blank" 
+                           class="btn-acao btn-preview">
+                            👁️ Preview
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function criarPaginacao(data) {
+            const itensPorPagina = parseInt(document.getElementById('itensPorPagina').value);
+            const totalPaginas = Math.ceil(data.count / itensPorPagina);
+            
+            let html = '<div class="paginacao">';
+            
+            // Botão anterior
+            if (data.previous) {
+                html += `<button class="btn-pagina" onclick="buscarDocumentos(${paginaAtual - 1})">« Anterior</button>`;
+            }
+            
+            // Números das páginas
+            const inicio = Math.max(1, paginaAtual - 2);
+            const fim = Math.min(totalPaginas, paginaAtual + 2);
+            
+            for (let i = inicio; i <= fim; i++) {
+                const ativo = i === paginaAtual ? 'ativo' : '';
+                html += `<button class="btn-pagina ${ativo}" onclick="buscarDocumentos(${i})">${i}</button>`;
+            }
+            
+            // Botão próximo
+            if (data.next) {
+                html += `<button class="btn-pagina" onclick="buscarDocumentos(${paginaAtual + 1})">Próximo »</button>`;
+            }
+            
+            html += `<span style="margin-left: 20px; color: #6c757d;">Página ${paginaAtual} de ${totalPaginas}</span>`;
+            html += '</div>';
+            
+            return html;
+        }
+        
+        // Limpar filtros
+        function limparFiltros() {
+            document.getElementById('query').value = '';
+            document.getElementById('categoria').value = '';
+            document.getElementById('tipoDocumento').value = '';
+            document.getElementById('correspondente').value = '';
+            document.getElementById('dataInicio').value = '';
+            document.getElementById('dataFim').value = '';
+            document.getElementById('resultados').innerHTML = '';
+            paginaAtual = 1;
+        }
+        
+        // Ordenar resultados (placeholder - requer nova busca)
+        function ordenarResultados(campo) {
+            // Em uma implementação completa, isso faria uma nova busca com ordenação
+            console.log('Ordenar por:', campo);
+        }
+        
+        // Event listeners
+        document.getElementById('query').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                buscarDocumentos();
+            }
+        });
+        
+        // Salvar configurações
+        document.getElementById('paperlessUrl').addEventListener('change', function() {
+            localStorage.setItem('paperless_url', this.value);
+        });
+        
+        document.getElementById('apiToken').addEventListener('change', function() {
+            localStorage.setItem('paperless_token', this.value);
+            // Recarregar metadados quando token muda
+            if (this.value) {
+                carregarMetadados();
+            }
+        });
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carregar configurações salvas
+            const savedUrl = localStorage.getItem('paperless_url');
+            const savedToken = localStorage.getItem('paperless_token');
+            
+            if (savedUrl) {
+                document.getElementById('paperlessUrl').value = savedUrl;
+            }
+            
+            if (savedToken) {
+                document.getElementById('apiToken').value = savedToken;
+                // Carregar metadados automaticamente
+                setTimeout(carregarMetadados, 500);
+            }
+        });
+    </script>
+</body>
+</html>
